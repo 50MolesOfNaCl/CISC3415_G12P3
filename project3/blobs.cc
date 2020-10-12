@@ -34,6 +34,19 @@ int main(int argc, char *argv[])
   // Allow the program to take charge of the motors (take care now)
   pp.SetMotorEnable(true);
 
+  //init before entering control loop
+  //See if there is only one blob, do something about it if not
+  if(bf.GetCount() > 1)
+  {
+	//We have more than one blob,
+	for()//each thing in bloblist
+	{
+		//compare and see which blob is bigger, make myBlob equal to that.
+		//By the end of it we should have our blob target
+	}
+  } else {
+	//Assign the only blob to myBlob
+  }
 
   // Control loop
   while(true) 
