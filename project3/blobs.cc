@@ -30,11 +30,18 @@ int main(int argc, char *argv[])
   player_blobfinder_data_t  blobList;   // Structure holding the blobs found
   player_blobfinder_blob_t* theBlobs;   // A point to a list of blobs
   player_blobfinder_blob_t  myBlob;     // A single blob
-
   // Allow the program to take charge of the motors (take care now)
   pp.SetMotorEnable(true);
 
-
+  //init myBlob as the first red blob we can find.
+	for(int i = 0; i < bf.GetCout(); i++)
+	{
+		if(bf.getBlob(i).color == 0)
+		{
+			myBlob == bf.GetBlob(i);
+			break;//then we get the hell out of there.
+		}
+	}
   // Control loop
   while(true) 
     {    
@@ -43,7 +50,6 @@ int main(int argc, char *argv[])
       // Read from the proxies
       robot.Read();
       blobfinder.Read();
-
       // We only want to drive if the bumpers are not pressed
 
       if ((bp[0] == 0)&&(bp[1] == 0))
@@ -62,7 +68,10 @@ int main(int argc, char *argv[])
 	      std::cout << "X: "     << bf.GetBlob(i).x     << std::endl;
 	      std::cout << "Y: "     << bf.GetBlob(i).y     << std::endl;
 	      std::cout << std::endl;
-
+		if(bf.GetBlob(i).color == 0 && ((myBlob.x < bf.GetBlob(i).x) || (myBlob.y < bf.GetBlob(i).y) )) //Is it red? Is it bigger than myBlob
+		{
+			myBlob = bf.GetBlob(i); //Then we have a new target.
+		}
 	    }
 	  }
 	  else
