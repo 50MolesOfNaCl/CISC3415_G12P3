@@ -32,13 +32,14 @@ int main(int argc, char *argv[])
   player_blobfinder_blob_t  myBlob;     // A single blob
   // Allow the program to take charge of the motors (take care now)
   pp.SetMotorEnable(true);
-
+	
+  blobfinder.Read();
   //init myBlob as the first red blob we can find.
-	for(int i = 0; i < bf.GetCout(); i++)
+	for(int i = 0; i < bf.GetCount(); i++)
 	{
-		if(bf.getBlob(i).color == 0)
+		if(bf.getBlob(i).color == 0) //ERROR: has no member named GetBlob
 		{
-			myBlob == bf.GetBlob(i);
+			myBlob = bf.GetBlob(i);
 			break;//then we get the hell out of there.
 		}
 	}
