@@ -1,16 +1,6 @@
 /**
  * laser-roomba.cc
- *  
- *  Group 12: Jennie Kang, Edmund Lam, Jamila Toaha
- *  
- *  Project 3 - Part 2 - Laser Navigation 
- *  
- *  This program uses laser sensor to help a robot avoid obstacles.
- *
- *
  * 
- *  Date: 10/27/2020
- *
  * Sample code for a robot that has two front bumpers and a laser scanner.
  * Suitable for use with the roomba.
  *
