@@ -56,6 +56,8 @@ int main(int argc, char *argv[])
 				//We only see one blob. See if it's larger than threshold
 				if(bf.GetCount() == 1 && bf.GetBlob(0).area > threshold)
 				{
+					std::cout << "Setting myBlob to it." << std::endl;
+					std::cout << "Area: " << bf.GetBlob(0).area <<std::endl;
 					myBlob = bf.GetBlob(0); //Set our target
 				}
 				//Handle more than one blob. Find the right one
@@ -112,4 +114,9 @@ int main(int argc, char *argv[])
 	} // end of while(true) loop
 }
 
-
+//We need to slow down as we get closer. This will take distance to target and return the adjusted speed.
+double proportionalControl(int distance)
+{
+	double speed = 1; //base speed
+	return speed - (distance/100); //temp until something better comes along.
+}
