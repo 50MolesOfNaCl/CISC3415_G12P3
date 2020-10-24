@@ -56,6 +56,7 @@ int main(int argc, char *argv[])
 				//We only see one blob. See if it's larger than threshold
 				if(bf.GetCount() == 1 && bf.GetBlob(0).area > threshold)
 				{
+					std::cout <<"1 viable blob found" << std::endl;
 					myBlob = bf.GetBlob(0); //Set our target
 				}
 				//Handle more than one blob. Find the right one
@@ -64,7 +65,7 @@ int main(int argc, char *argv[])
 		    			for(int i = 0; i < bf.GetCount()+1; i++){
 		     				//std::cout << "Id: "    << bf.GetBlob(i).id    << std::endl;
 		      				//std::cout << "Color: " << (short)bf.GetBlob(i).color << std::endl;
-		      				//std::cout << "Area: "  << bf.GetBlob(i).area  << std::endl;
+		      				std::cout << "Area: "  << bf.GetBlob(i).area  << std::endl;
 		      				//std::cout << "X: "     << bf.GetBlob(i).x     << std::endl;
 		      				//std::cout << "Y: "     << bf.GetBlob(i).y     << std::endl;
 		      				//std::cout << std::endl;
@@ -72,9 +73,12 @@ int main(int argc, char *argv[])
 						//compare and see who is bigger. myBlob will be set to that by the end of this loop
 						//Compare blob to threshold first, speeds up loop
 						if(bf.GetBlob(i).area > threshold){
+							std::cout << "Comparing blobs" << std::endl;
 							if(bf.GetBlob(i).area > bf.GetBlob(i+1).area){ //First blob is bigger
+								std::cout << "myBlob set" << std::endl;
 								myBlob = bf.GetBlob(i);
 							} else {
+								std::cout << "myBlob set2" << std::endl;
 								myBlob = bf.GetBlob(i+1); //2nd Blob is bigger.
 							}
 						}
