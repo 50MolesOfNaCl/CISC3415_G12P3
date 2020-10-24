@@ -61,7 +61,7 @@ int main(int argc, char *argv[])
 				//Handle more than one blob. Find the right one
 				else {
 					//Look at each and every blob, look for largest area
-		    			for(int i = 1; i < bf.GetCount(); i++){
+		    			for(int i = 0; i < bf.GetCount()+1; i++){
 		     				//std::cout << "Id: "    << bf.GetBlob(i).id    << std::endl;
 		      				//std::cout << "Color: " << (short)bf.GetBlob(i).color << std::endl;
 		      				//std::cout << "Area: "  << bf.GetBlob(i).area  << std::endl;
@@ -70,10 +70,13 @@ int main(int argc, char *argv[])
 		      				//std::cout << std::endl;
 						
 						//compare and see who is bigger. myBlob will be set to that by the end of this loop
-						if(bf.GetBlob(i).area > bf.GetBlob(i-1).area){
-							myBlob = bf.GetBlob(i);
-						} else {
-							myBlob = bf.GetBlob(i-1);
+						//Compare blob to threshold first, speeds up loop
+						if(bf.GetBlob(i).area > threshold){
+							if(bf.GetBlob(i).area > bf.GetBlob(i+1).area){ //First blob is bigger
+								myBlob = bf.GetBlob(i);
+							} else {
+								myBlob = bf.GetBlob(i+1); //2nd Blob is bigger.
+							}
 						}
 					}//End of for loop, biggest blob found
 		    		}
