@@ -31,10 +31,10 @@ int main(int argc, char *argv[])
   	player_blobfinder_blob_t* theBlobs;   // A point to a list of blobs
   	player_blobfinder_blob_t  myBlob;     // A single blob
   	int threshold = 120; //min blob size we care about
+	bool isSet; //I don't feel like setting myBlob to null
 	
   	// Allow the program to take charge of the motors (take care now)
   	pp.SetMotorEnable(true);
-
 
   	// Control loop
 	while(true)
@@ -58,14 +58,18 @@ int main(int argc, char *argv[])
 				{
 					std::cout << "Setting myBlob to it." << std::endl;
 					std::cout << "Area: " << bf.GetBlob(0).area <<std::endl;
+					std::cout << "X: " << bf.GetBlob(0).x <<std::endl;
+					std::cout << "Y: " << bf.GetBlob(0).y <<std::endl;
+					std::cout << std::endl;
 					myBlob = bf.GetBlob(0); //Set our target
 				}
 				//Handle more than one blob. Find the right one
 				else {
+					isSet = false; //only true if myBlob points to a blob down below.
 					//Look at each and every blob, look for largest area
 		    			for(int i = 0; i < bf.GetCount(); i++){
-		     				std::cout << "Id: "    << bf.GetBlob(i).id    << std::endl;
-		      				std::cout << "Color: " << (short)bf.GetBlob(i).color << std::endl;
+		     				//std::cout << "Id: "    << bf.GetBlob(i).id    << std::endl;//Does not work atm
+		      				//std::cout << "Color: " << (short)bf.GetBlob(i).color << std::endl; //Not important atm
 		      				std::cout << "Area: "  << bf.GetBlob(i).area  << std::endl;
 		      				std::cout << "X: "     << bf.GetBlob(i).x     << std::endl;
 		      				std::cout << "Y: "     << bf.GetBlob(i).y     << std::endl;
@@ -78,12 +82,22 @@ int main(int argc, char *argv[])
 							if(bf.GetBlob(i).area > bf.GetBlob(i+1).area){ //First blob is bigger
 								//std::cout << "myyBlob set1" << std::endl;//1st Blob is bigger.
 								myBlob = bf.GetBlob(i);
+								isSet = true;
 							} else {
 								//std::cout << "myBlob set2" << std::endl;
 								myBlob = bf.GetBlob(i+1); //2nd Blob is bigger.
+								isSet = true;
 							}
 						}
-					}//End of for loop, biggest blob found
+						//None of the blobs we see pass threshold!
+						if(isSet == false)
+						{
+							std::cout << "No viable blobs in sight, scanning!" <<std::endl;
+							//we need to scan for our blob!
+							speed = 0;
+							turnrate = 0.1;
+						}
+					}//End of for loop, biggest blob found hopefully
 		    			std::cout << "---------------------------------------------------" <<std::endl;
 				}
 				//Now that we have our target, let's do something about it
@@ -98,10 +112,13 @@ int main(int argc, char *argv[])
 					{ //Blob is to our left!
 						speed = 0;
 						turnrate = -.1;
-					} else
+					} else if (myBlob.x < 160)
 					{ //Blob is to our right!
 						speed = 0;
 						turnrate = 0.1;
+					} else {
+						//We don't see myBlob?!
+						//I honestly don't know if you can even reach here
 					}
 				} else {
 					//We're close enough
@@ -112,7 +129,10 @@ int main(int argc, char *argv[])
 		  	}
 			else //We see no blobs
 			{
-				//Do Something
+				//start scanning for blobs by spinning.
+				//If there's no blobs then we just spin forever I guess.
+				speed = 0;
+				turnrate = 0.1;
 			}
 		}
 		// If bumpers are pressed, do nothing.
@@ -136,5 +156,5 @@ int main(int argc, char *argv[])
 double proportionalControl(int distance)
 {
 	double speedP = 1; //base speed
-	return speedP - (distance/100); //temp until something better comes along.
+	return speedP - (distance/100); //TODO: temp until something better comes along.
 }
