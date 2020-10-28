@@ -1,6 +1,16 @@
 /**
  * laser-roomba.cc
+ *  
+ *  Group 12: Jennie Kang, Edmund Lam, Jamila Toaha
+ *  
+ *  Project 3 - Part 2 - Laser Navigation 
+ *  
+ *  This program uses laser sensor to help a robot avoid obstacles.
+ *
+ *
  * 
+ *  Date: 10/27/2020
+ *
  * Sample code for a robot that has two front bumpers and a laser scanner.
  * Suitable for use with the roomba.
  *
@@ -14,28 +24,37 @@
 #include <libplayerc++/playerc++.h>
 using namespace PlayerCc;  
 
+  double maxRange, minLeft, minRight, range, bearing, middleScanLine;
+	
+
+  double leftRange, rightRange;
+  int points;
+
+
 /**
  * Function headers
  *
  **/
 
-void printLaserData(LaserProxy& sp);
+
+void printLaserData();
 void printRobotData(BumperProxy& bp);
 
 /**
  * main()
  *
  **/
-
 int main(int argc, char *argv[])
 {  
-
+	
 
   // Variables
   int counter = 0;
   double speed;            // How fast do we want the robot to go forwards?
   double turnrate;         // How fast do we want the robot to turn?
   player_laser_data laser; // For handling laser data
+
+
 
   // Set up proxies. These are the names we will use to connect to 
   // the interface to the robot.
@@ -53,10 +72,21 @@ int main(int argc, char *argv[])
       // Update information from the robot.
       robot.Read();
 
+
+
       // Print information about the laser. Check the counter first to stop
       // problems on startup
       if(counter > 2){
-	printLaserData(sp);
+  	  maxRange  = sp.GetMaxRange();
+	  minLeft   = sp.MinLeft();
+	  minRight  = sp.MinRight();
+	  points    = sp.GetCount();
+	  range     = sp.GetRange(5);
+	  middleScanLine = sp.GetRange(180);
+	  bearing   = sp.GetBearing(5);
+	leftRange = sp.GetRange(360); //left most range
+   	rightRange = sp.GetRange(0);  //right most range
+	printLaserData();
       }
 
       // Print data on the robot to the terminal
@@ -114,9 +144,10 @@ int main(int argc, char *argv[])
 		turnrate = 0;
 	}
 	//stop as close as possible to last wall without hitting it
-	if(counter > 1193) {
+	if(leftRange + rightRange <=2.5 && leftRange + rightRange > 2.3 && middleScanLine < .5) {
 		speed = 0;
 		turnrate = 0;
+			break;
 	}
       }     
 
@@ -135,24 +166,13 @@ int main(int argc, char *argv[])
 } // end of main()
 
 
-void printLaserData(LaserProxy& sp)
+void printLaserData()
 {
-
-  double maxRange, minLeft, minRight, range, bearing, middleScanLine;
-  int points;
 
   // This illustrates the things the proxy provides. These should be self-explanatory
   // if you look at the print statements, except possible GetRange(5) and GetBearing(5).
   // These allow you to access one particular reading. You might want to use this
   // to look through all the values in a given arc to find the closest object.
-
-  maxRange  = sp.GetMaxRange();
-  minLeft   = sp.MinLeft();
-  minRight  = sp.MinRight();
-  points    = sp.GetCount();
-  range     = sp.GetRange(5);
-  middleScanLine = sp.GetRange(180);
-  bearing   = sp.GetBearing(5);
 
   std::cout << "Laser says..." << std::endl;
   std::cout << "Maximum distance I can see: " << maxRange << std::endl;
@@ -160,8 +180,11 @@ void printLaserData(LaserProxy& sp)
   std::cout << "Closest thing on left: " << minLeft << std::endl;
   std::cout << "Closest thing on right: " << minRight << std::endl;
   std::cout << "Range of a single point: " << range << std::endl;
-  std::cout << "Range of a middle scan line: " << middleScanLine << std::endl;
   std::cout << "Bearing of a single point: " << bearing << std::endl;
+
+  std::cout << "Range of a middle scan line: " << middleScanLine << std::endl;
+  std::cout << "Range of Left Most Point: " << leftRange << std::endl;
+  std::cout << "Range of Right Most Point: " << rightRange << std::endl;
 
   return;
 } // End of printLaserData()
