@@ -67,6 +67,8 @@ int main(int argc, char *argv[])
   pp.SetMotorEnable(true);
 
   // Main control loop
+
+	let turnCounter = 0;
   while(true) 
     {    
       // Update information from the robot.
@@ -100,7 +102,17 @@ int main(int argc, char *argv[])
       } 
       else {
 	//turn when robot reaches first wall
-	if(counter < 412) {
+
+	if (leftRange + rightRange >= 2.5 && middleScanLine < 1) {
+	   speed=0;
+           turnrate = 0;
+		if(leftRange > rightRange){
+			turnrate = dtor(15);
+		} else {
+			turnrate = dtor(-20);
+		}
+	} else
+/*	if(counter < 412) {
 		speed=.3;
         	turnrate = 0;
         	if(sp.MinLeft() > 2) {
@@ -143,11 +155,19 @@ int main(int argc, char *argv[])
 		speed = 0.3;
 		turnrate = 0;
 	}
+
+*/
+
 	//stop as close as possible to last wall without hitting it
-	if(leftRange + rightRange <=2.5 && leftRange + rightRange > 2.3 && middleScanLine < .5) {
+	// this basically checks the max values of the left-most and right-most points, adds up value, and makes sure value is between 2.3 and 2.5. Then it makes sure it's close to wall as possible before stopping. In this case .5 meters awa.
+	if(leftRange + rightRange <= 2.5 && leftRange + rightRange > 2.3 && middleScanLine <= .5) {
 		speed = 0;
 		turnrate = 0;
 			break;
+	} else {
+		//keep going forward
+		speed = 0.3;
+		turnrate = 0;
 	}
       }     
 
@@ -196,6 +216,12 @@ void printLaserData()
  * of the robot.
  *
  **/
+
+//turn for 3 seconds
+void turnInPlace(int degrees) {
+
+
+}
 
 void printRobotData(BumperProxy& bp)
 {
