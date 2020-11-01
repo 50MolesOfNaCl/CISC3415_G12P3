@@ -70,6 +70,7 @@ int main(int argc, char *argv[])
 
 	int counterForCentering1 = 0;
 	int counterForCentering2 = 0;
+	int counterForTurning = 0;
 	int degrees = 0;
   while(true) 
     {    
@@ -103,14 +104,22 @@ int main(int argc, char *argv[])
 	speed= 0;
 	turnrate= 0;
       } 
+
+	// Stops robot .5 meters before top left wall and ends program
+	// this basically checks the max values of the left-most and right-most points, adds up value, and makes sure value is between 2.2 and 2.5. Then it makes sure it's close to wall as possible before stopping. In this case .5 meters away.
+ 	else if(leftRange + rightRange <= 2.5 && leftRange + rightRange > 2.2 && middleScanLine <= .5) {
+		speed = 0;
+		turnrate = 0;
+		pp.SetSpeed(speed, turnrate); // Set final speeed and turnrate before breaking out of program
+			break;
+	}
   
-	//turn when robot reaches first wall && middleScanLine < 1
 		
 	// Adjust robot to center of lane if not centered - part 1/2 - if robot is off center, it heads towards the center
-	else if(leftRange + rightRange <= 2.8 && maxRange > 2 && (minLeft > minRight || minLeft < minRight) ) {
-		//counterForCentering1 = 0;
+	else if(leftRange + rightRange < 2.8 && maxRange > 2 && (minLeft > minRight || minLeft < minRight) ) {
 
-			// Momentarily stops robot for 1 second, while it shifts it's rotation, then moves forward,
+
+			// Momentarily stops robot for 1 second, while it shifts it's rotation, then it moves forward,
 			if(counterForCentering1 == 0) degrees = minLeft > minRight ? 20 : -20;
 
 			if(counterForCentering1++ < 10){ 
@@ -125,106 +134,48 @@ int main(int argc, char *argv[])
 		
 	} 
 
-	// Adjust robot to center of lane if not centered - part 2/2 - when it reaches the center, it rotates in opposite direction and alternates as needed. For example, if part 1 it rotated 20 degrees, in part 2 it will rotate -20 degrees.
-	else if( leftRange + rightRange <= 2.8 && minLeft == minRight) {
+	// Adjust robot to center of lane if not centered - part 2/2 - when it reaches the center, it rotates in opposite direction and alternates as needed. For example, if part 1 is rotated 20 degrees, in part 2 will it rotate -20 degrees.
+	else if( leftRange + rightRange < 2.8 && minLeft == minRight) {
 
 			if(counterForCentering2++ < 10) {
 				speed= 0;
-				turnrate = dtor(degrees * -1); // Straightens out robot
+				turnrate = dtor(degrees * -1); // Straightens out robot using opposite angle
 			}
 			else {
-				counterForCentering1 = 0; // This is reset so part 1 can adjust towards the center, when not even. 
-							  // If it's even, it will continue going straight ahead. 
+ 			       // If it's even, it will continue going straight ahead. 
 				turnrate = 0;
 				speed = .3;
 			}
+				counterForCentering1 = 0; // This is reset so part 1 can adjust towards the center, when not even. 
 	
 	}
 
 
- else 
-	
+ else  if (leftRange + rightRange > 2.6 ) {
 
-//2nd try based on Jennie's code
-	if (leftRange + rightRange > 2.5 ) {
-          counterForCentering1 = 0
-	   //speed= 0;
-           turnrate = 0;
-		//if the left side is larger than the right side/ turn to the left
-		if(leftRange > rightRange){
-			speed=.3;
-        		turnrate = 0;
-        		if(minLeft > 2) {
-				turnrate = dtor(10);
-			} else if(minRight > 0.45) {
-				turnrate = dtor(10);
-			}
-		} else { // if right side is larger than the left side, turn to the right
-			if(minRight > 2) {
-				turnrate = dtor(-20);
-			}
-			else if(minLeft > 1.5) {
-				turnrate = dtor(-20);
-			}
-		}
-	} else
-/*
- //1st try based on counter	
-if(counter < 412) {
-		speed=.3;
-        	turnrate = 0;
-        	if(sp.MinLeft() > 2) {
-			turnrate = dtor(10);
-		}
-		else if(sp.MinRight() > 0.45) {
-			turnrate = dtor(10);
-		}
-	}
-	//go forward
-	if(counter > 412) {
-		speed = 0.3;
-		turnrate = 0;
-	}
-	//turn when robot reaches second wall
-	if(counter > 570) {
-		if(sp.MinRight() > 2) {
-			turnrate = dtor(-20);
-		}
-		else if(sp.MinLeft() > 1.5) {
-			turnrate = dtor(-20);
-		}
-	}
-	//go forward
-	if(counter > 670) {
-		speed = .3;
-		turnrate = 0;
-	}
-	//turn when robot reaches third wall
-	if(counter > 840) {
-		if(sp.MinLeft() > 1.8) {
-			turnrate = dtor(23);
-		}
-		else if(sp.MinRight() > 1.4) {
-			turnrate = dtor(22);
-		}
-	}
-	//go forward
-	if(counter > 950) {
-		speed = 0.3;
-		turnrate = 0;
+		counterForCentering1 = 0;
+
+	//This detects if there is a deadend straight ahead. If so, starts off the counter for turning
+	if (middleScanLine < 1) {
+		counterForTurning = 1;
 	}
 
-*/
+	//If the counter for turning is triggered, will turn according to relevant side, for an angle that is less than but close to 90 degrees (~30 degree per second)
+	  if(counterForTurning > 0 && counterForTurning < 27) {
+				speed= 0;
+				turnrate = leftRange > rightRange ? dtor(27) : dtor (-27); // Turns robot about 90 degrees within a ~3 second interval (27)
+				counterForTurning++;
+			}
+			else {
+			 	counterForCentering1 = 0;
+				counterForTurning = 0;
+				turnrate = 0;
+				speed = .3;
+			} 
 
-	//stop as close as possible to last wall without hitting it
-	// this basically checks the max values of the left-most and right-most points, adds up value, and makes sure value is between 2.3 and 2.5. Then it makes sure it's close to wall as possible before stopping. In this case .5 meters away.
-	if(leftRange + rightRange <= 2.5 && leftRange + rightRange > 2.3 && middleScanLine <= .5) {
-		speed = 0;
-		turnrate = 0;
-			break;
-	} else {
-		//keep going forward
-		counterForCentering2 = 0;
+	} 
+	 else {
+		//keep going forward and reset values so they don't interefere on next iterations
 		counterForCentering1 = 0;
 		speed = 0.3;
 		turnrate = 0;
@@ -277,11 +228,6 @@ void printLaserData()
  *
  **/
 
-//turn for 3 seconds
-void turnInPlace(int degrees) {
-
-
-}
 
 void printRobotData(BumperProxy& bp)
 {
