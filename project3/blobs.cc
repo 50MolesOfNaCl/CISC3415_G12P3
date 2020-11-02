@@ -37,7 +37,7 @@ int main(int argc, char *argv[])
   	player_blobfinder_data_t  blobList;   // Structure holding the blobs found
   	player_blobfinder_blob_t* theBlobs;   // A point to a list of blobs
   	player_blobfinder_blob_t  myBlob;     // A single blob
-  	int threshold = 30; // 120 min blob size we care about
+  	int threshold = 120; // 120 min blob size we care about
 	bool isSet; //I don't feel like setting myBlob to null
 	
   	// Allow the program to take charge of the motors (take care now)
@@ -102,8 +102,8 @@ int main(int argc, char *argv[])
 						//compare and see who is bigger. myBlob will be set to that by the end of this loop
 						//Compare blob to threshold first, speeds up loop
 						if(bf.GetBlob(i).area > threshold){
-							//if an area value already exists, compares the value to the current blobs area. If the current blob area is larger, area value gets replaced. //if it doesn't already exist, will replace it with default value		 
-							
+							//if an area value already exists, compares the value to the current blobs area. If the current blob area is larger, area value gets replaced.
+							//if it doesn't already exist, will replace it with default value
 							if (bf.GetBlob(i).area > areaLargest ) {
 								areaLargest = bf.GetBlob(i).area;
 								indexAreaLargest = i;
@@ -134,12 +134,12 @@ int main(int argc, char *argv[])
 				}
 
 				//Now that we have our target, let's do something about it
-				if(true){ //TODO: If not close to blob
+				if(true){
 					if(myBlob.x == 160)
 					{//Are we facing the Blob?
 						//Yes!
 						std::cout << "approaching blob" << std::endl;
-						speed = 1;
+						speed = 0.1 - (100 / (double)myBlob.area); //Janky proportional control
 						turnrate = 0;
 					} else if(myBlob.x > 160)
 					{ //Blob is to our left!
@@ -156,6 +156,7 @@ int main(int argc, char *argv[])
 				} else {
 					//We're close enough
 					//Do nothing
+					std::cout << "we're done!" << std::endl;
 					speed = 0;
 					turnrate = 0;
 				}
@@ -186,11 +187,4 @@ int main(int argc, char *argv[])
 		pp.SetSpeed(speed, turnrate);
 	
 	} // end of while(true) loop
-}
-
-//We need to slow down as we get closer. This will take distance to target and return the adjusted speed.
-double proportionalControl(int distance)
-{
-	double speedP = 1; //base speed
-	return speedP - (distance/100); //TODO: temp until something better comes along.
 }
