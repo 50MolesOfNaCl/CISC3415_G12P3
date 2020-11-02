@@ -139,7 +139,7 @@ int main(int argc, char *argv[])
 					{//Are we facing the Blob?
 						//Yes!
 						std::cout << "approaching blob" << std::endl;
-						speed = 0.1 - (100 / (double)myBlob.area); //Janky proportional control
+						speed = 0.1 + (100 / (double)myBlob.area); //Janky proportional control
 						turnrate = 0;
 					} else if(myBlob.x > 160)
 					{ //Blob is to our left!
