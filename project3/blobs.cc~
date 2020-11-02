@@ -129,7 +129,6 @@ int main(int argc, char *argv[])
 							turnrate = 0.1;
 						}
 					}//End of for loop, biggest blob found hopefully
-					myBlob = bf.GetBlob(indexAreaLargest);
 		    			std::cout << "---------------------------------------------------" <<std::endl;
 				}
 
