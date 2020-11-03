@@ -6,10 +6,19 @@
  *  Project 3 - Part 2 - Laser Navigation 
  *  
  *  This program uses laser sensor to help a robot avoid obstacles.
- *
- *
+ *  Basic Logic robot uses to make it's way through the maze: 
+ *   - Lane Rules: When enclosed within a lane, it centers itself by alternating with a 2 step process: 
+ *     1) If off center, it heads toward centers (rotates at an angle, that is based on whether 
+ *        right or left range is larger). 
+ *     2) Once at center, it adjusts itself by rotating in opposite angle from part 1. 
+ *        - If it goes off center, repeats part 1, and then repeats part 2 again when reaches center, and so on.
+ *   - Crevice Rules: When it reaches an opening at the end of a lane, robot follows different rules, when robot senses an opening on 
+ *     left and right sides: 
+ *        - When it senses a wall that is less than a 1 meter away, it rotates about ~90 degrees and moves forward, 
+ *          repeats process with second wall, and then heads into a lane
+ *   - Top Left Rule: When it reaches the top left, and robot detects that it is closed in, it stops .5 meters away from wall
  * 
- *  Date: 10/27/2020
+ *  Date: 10/27/2020 - 11/2/2020
  *
  * Sample code for a robot that has two front bumpers and a laser scanner.
  * Suitable for use with the roomba.
@@ -24,9 +33,14 @@
 #include <libplayerc++/playerc++.h>
 using namespace PlayerCc;  
 
-  double maxRange, minLeft, minRight, range, bearing, middleScanLine;
-	
 
+/**
+ * Global Variables
+ *
+ **/
+
+
+  double maxRange, minLeft, minRight, range, bearing, middleScanLine;
   double leftRange, rightRange;
   int points;
 
@@ -68,9 +82,9 @@ int main(int argc, char *argv[])
 
   // Main control loop
 
-	int counterForCentering1 = 0;
-	int counterForCentering2 = 0;
-	int counterForTurning = 0;
+	int counterForCentering1 = 0; // when in a lane
+	int counterForCentering2 = 0; // when in a lane
+	int counterForTurning = 0;    // when switching between lanes
 	int degrees = 0;
   while(true) 
     {    
@@ -81,17 +95,17 @@ int main(int argc, char *argv[])
 
       // Print information about the laser. Check the counter first to stop
       // problems on startup
-      // Note: the values have been adjusted for 2 decimals. Otherwise, it seems to miss the matching values
+      // Note: the values have been adjusted for 1 decimal value. Otherwise, there is a lower probability of an exact match
       if(counter > 2){
   	  maxRange  = (double) ((int)(sp.GetMaxRange()*10/1))/10;
 	  minLeft   = (double) ((int)(sp.MinLeft()*10/1))/10;
 	  minRight  = (double) ((int)(sp.MinRight()*10/1))/10;
 	  points    = (double) ((int)(sp.GetCount()*10/1))/10;
 	  range     = (double) ((int)(sp.GetRange(5)*10/1))/10;
-     middleScanLine = (double) ((int)(sp.GetRange(180)*10/1))/10;
+     middleScanLine = (double) ((int)(sp.GetRange(180)*10/1))/10;  // straight ahead range
 	  bearing   = (double) ((int)(sp.GetBearing(5)*10/1))/10;
-	  leftRange = (double) ((int)(sp.GetRange(360)*10/1))/10; //left most range
-   	  rightRange =(double) ((int)(sp.GetRange(0)*10/1))/10;  //right most range
+	  leftRange = (double) ((int)(sp.GetRange(360)*10/1))/10;  // left most range
+   	  rightRange =(double) ((int)(sp.GetRange(0)*10/1))/10;    // right most range
 	printLaserData();
       }
 
@@ -105,38 +119,54 @@ int main(int argc, char *argv[])
 	turnrate= 0;
       } 
 
-	// Stops robot .5 meters before top left wall and ends program
-	// this basically checks the max values of the left-most and right-most points, adds up value, and makes sure value is between 2.2 and 2.5. Then it makes sure it's close to wall as possible before stopping. In this case .5 meters away.
+
+	/****** TOP LEFT RULE:  Stops robot .5 meters before top left wall and ends program ******/
+	// Basically checks if the robot is closed in on all three sides
+	// by checking the max values of the left-most and right-most points, adds up value, 
+	// and makes sure value is between 2.2 and 2.5. Then it makes sure it's close to wall as possible 
+	// before stopping. In this case .5 meters away.
  	else if(leftRange + rightRange <= 2.5 && leftRange + rightRange > 2.2 && middleScanLine <= .5) {
 		speed = 0;
 		turnrate = 0;
-		pp.SetSpeed(speed, turnrate); // Set final speeed and turnrate before breaking out of program
+		pp.SetSpeed(speed, turnrate); // Set final speeed and turnrate before breaking out of program,
+					      // otherwise robot seems to keep going
 			break;
 	}
   
-		
-	// Adjust robot to center of lane if not centered - part 1/2 - if robot is off center, it heads towards the center
+	/****** LANE RULES *******/
+	// Lane Rules: Adjust robot to center of lane if not centered
+	// part 1/2 - if robot is off center, head towards the center
 	else if(leftRange + rightRange < 2.8 && maxRange > 2 && (minLeft > minRight || minLeft < minRight) ) {
 
-
+  std::cout << "Centering Part 1 " << counterForCentering1 << std::endl;
 			// Momentarily stops robot for 1 second, while it shifts it's rotation, then it moves forward,
-			if(counterForCentering1 == 0) degrees = minLeft > minRight ? 20 : -20;
+			 //if(counterForCentering1 == 0) 
+			degrees = minLeft > minRight ? 20 : -20;
 
 			if(counterForCentering1++ < 10){ 
 				speed= 0;
                        		turnrate = dtor(degrees);
 			} 
+			else if (counterForCentering1 > 80) {
+				// Sometimes when in the lane for prolonged time,
+				// the robot forgets to center itself.
+				// This helps trigger the process again
+				// first 8 seconds gives time for robot to adjust itself, 
+				// if it's really off center, like in the beginning
+				counterForCentering1 = 0;
+			}
 			else {
 				turnrate = 0;
 				speed = .3;
-			}
-
+			} 
 		
 	} 
 
-	// Adjust robot to center of lane if not centered - part 2/2 - when it reaches the center, it rotates in opposite direction and alternates as needed. For example, if part 1 is rotated 20 degrees, in part 2 will it rotate -20 degrees.
+	// Lane Rules: Adjust robot to center of lane if not centered 
+	// part 2/2 - when it reaches the center, it rotates in opposite direction set in part 1 and 
+	// alternates as needed. For example, if part 1 is rotated 20 degrees, in part 2 will it rotate -20 degrees.
 	else if( leftRange + rightRange < 2.8 && minLeft == minRight) {
-
+  std::cout << "Centering Part 1 " << counterForCentering2 << std::endl;
 			if(counterForCentering2++ < 10) {
 				speed= 0;
 				turnrate = dtor(degrees * -1); // Straightens out robot using opposite angle
@@ -150,20 +180,25 @@ int main(int argc, char *argv[])
 	
 	}
 
+	/****** CREVICE RULES:  this checks if the robot is not in a lane/ in a turning crevice. ********/
+	// It knows this, by checking the value of the sum of the left and right ranges
+	// It basically rotates 90 degrees before hitting walls in the crevice and makes its way into a lane
+ 	else  if (leftRange + rightRange > 2.6 ) {
 
- else  if (leftRange + rightRange > 2.6 ) {
+		
 
-		counterForCentering1 = 0;
-
-	//This detects if there is a deadend straight ahead. If so, starts off the counter for turning
+	// This detects if there is a deadend straight ahead. If so, starts off the counter for turning
 	if (middleScanLine < 1) {
 		counterForTurning = 1;
 	}
 
-	//If the counter for turning is triggered, will turn according to relevant side, for an angle that is less than but close to 90 degrees (~30 degree per second)
+	// If the counter for turning is triggered, will turn according to relevant side, for an angle that is 
+	// less than but close to 90 degrees for about a 3 second interval (27 cycles) (~30 degrees per second)
 	  if(counterForTurning > 0 && counterForTurning < 27) {
 				speed= 0;
-				turnrate = leftRange > rightRange ? dtor(27) : dtor (-27); // Turns robot about 90 degrees within a ~3 second interval (27)
+
+				// Turns robot about 90 degrees within a ~3 second interval (27)
+				turnrate = leftRange > rightRange ? dtor(27) : dtor (-27); 
 				counterForTurning++;
 			}
 			else {
@@ -172,10 +207,12 @@ int main(int argc, char *argv[])
 				turnrate = 0;
 				speed = .3;
 			} 
+		counterForCentering1 = 0;
 
 	} 
+	/***** DEFAULT RULE ******/
 	 else {
-		//keep going forward and reset values so they don't interefere on next iterations
+		// Keep going forward and reset values so they don't interfere on next iterations
 		counterForCentering1 = 0;
 		speed = 0.3;
 		turnrate = 0;
